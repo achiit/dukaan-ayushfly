@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our School, Our Friends, Our Memories</title>
+  <!-- Google Fonts for Scrapbook/Handwriting Feel -->
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Patrick+Hand&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --book-blue: #1e3a8a;
+      --book-blue-light: #2563eb;
+      --paper-white: #fdfbf7;
+      --line-blue: #cbd5e1;
+      --margin-red: #fca5a5;
+      --clip-yellow: #facc15;
+      --wood-dark: #3e2723;
+      --wood-mid: #4e342e;
+      --book-width: 440px;
+      --book-height: 580px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      color: #1e293b;
+      overflow-x: hidden;
+      /* Subtle wooden desk texture */
+      background-color: var(--wood-dark);
+      background-image: 
+        radial-gradient(circle at center, rgba(0,0,0,0) 0%, rgba(0,0,0,0.55) 100%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 2px, transparent 2px, transparent 8px),
+        linear-gradient(180deg, #5d4037 0%, #3e2723 50%, #271815 100%);
+      padding: 15px;
+    }
+
+    /* Top Bar Controls */
+    .top-bar {
+      position: fixed;
+      top: 16px;
+      right: 20px;
+      left: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .badge, .music-btn {
+      pointer-events: auto;
+      background: rgba(30, 58, 138, 0.9);
+      color: #fff;
+      border: 2px solid var(--clip-yellow);
+      padding: 8px 14px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.2s;
+    }
+
+    .music-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* 3D Scene Container */
+    .scene {
+      width: calc(var(--book-width) * 2);
+      height: var(--book-height);
+      perspective: 2200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 30px 0 15px;
+    }
+
+    .book {
+      width: var(--book-width);
+      height: var(--book-height);
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.645, 0.045, 0.355, 1);
+    }
+
+    /* Shift book right on desktop when open so the spread is centered */
+    .book.open-desktop {
+      transform: translateX(50%);
+    }
+
+    /* Individual Flippable Sheet */
+    .sheet {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1);
+      border-radius: 4px 14px 14px 4px;
+    }
+
+    .sheet.flipped {
+      transform: rotateY(-180deg);
+    }
+
+    /* Front & Back Surfaces of a Sheet */
+    .page-surface {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: 4px 14px 14px 4px;
+      overflow: hidden;
+      padding: 24px 22px 36px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      /* Lined White Notebook Paper */
+      background-color: var(--paper-white);
+      background-image: 
+        linear-gradient(90deg, transparent 26px, var(--margin-red) 26px, var(--margin-red) 28px, transparent 28px),
+        repeating-linear-gradient(transparent, transparent 27px, var(--line-blue) 27px, var(--line-blue) 28px);
+      box-shadow: inset 15px 0 25px rgba(0,0,0,0.08), 0 8px 25px rgba(0,0,0,0.35);
+    }
+
+    .page-surface.back {
+      transform: rotateY(180deg);
+      border-radius: 14px 4px 4px 14px;
+      padding: 24px 34px 36px 22px;
+      background-image: 
+        linear-gradient(270deg, transparent 26px, var(--margin-red) 26px, var(--margin-red) 28px, transparent 28px),
+        repeating-linear-gradient(transparent, transparent 27px, var(--line-blue) 27px, var(--line-blue) 28px);
+      box-shadow: inset -15px 0 25px rgba(0,0,0,0.1), 0 8px 25px rgba(0,0,0,0.35);
+    }
+
+    /* Blue Creative Scrapbook Cover */
+    .page-surface.cover-front,
+    .page-surface.cover-back {
+      background: 
+        radial-gradient(circle at 20% 20%, #3b82f6 0%, #1e3a8a 65%, #172554 100%);
+      color: #fff;
+      border: 4px solid #172554;
+      padding: 28px;
+      box-shadow: 
+        inset 18px 0 25px rgba(0,0,0,0.45),
+        inset -2px 0 4px rgba(255,255,255,0.2),
+        10px 15px 30px rgba(0,0,0,0.6);
+    }
+
+    /* Spine stitch effect on front cover */
+    .cover-front::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 16px;
+      width: 4px;
+      height: 100%;
+      background: repeating-linear-gradient(
+        to bottom,
+        var(--clip-yellow) 0px,
+        var(--clip-yellow) 12px,
+        transparent 12px,
+        transparent 22px
+      );
+      opacity: 0.85;
+    }
+
+    .cover-frame {
+      border: 3px dashed rgba(250, 204, 21, 0.75);
+      border-radius: 12px;
+      height: 100%;
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.04);
+      position: relative;
+    }
+
+    .cover-title {
+      font-family: 'Caveat', cursive;
+      font-size: 2.5rem;
+      line-height: 1.1;
+      color: #fff;
+      text-shadow: 0 3px 6px rgba(0,0,0,0.5);
+      margin-top: 8px;
+    }
+
+    .cover-subtitle {
+      font-family: 'Patrick Hand', cursive;
+      font-size: 1.15rem;
+      color: var(--clip-yellow);
+      letter-spacing: 0.5px;
+    }
+
+    .tap-prompt {
+      background: var(--clip-yellow);
+      color: #1e3a8a;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 8px 18px;
+      border-radius: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      animation: pulse 1.8s infinite;
+      cursor: pointer;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    /* Typography & Scrapbook Elements */
+    .page-header {
+      border-bottom: 2px dashed #3b82f6;
+      padding-bottom: 4px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .page-title {
+      font-family: 'Caveat', cursive;
+      font-size: 1.9rem;
+      color: var(--book-blue);
+      font-weight: 700;
+    }
+
+    .page-tag {
+      background: #dbeafe;
+      color: var(--book-blue);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid #93c5fd;
+    }
+
+    .memory-note {
+      font-family: 'Patrick Hand', cursive;
+      font-size: 1.05rem;
+      line-height: 1.45;
+      color: #334155;
+      background: rgba(254, 249, 195, 0.75);
+      border-left: 4px solid var(--clip-yellow);
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin: 6px 0;
+    }
+
+    /* Polaroid Frame + Yellow Paper Clip */
+    .polaroid-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      my: auto;
+    }
+
+    .polaroid {
+      background: #ffffff;
+      padding: 8px 8px 22px 8px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+      border: 1px solid #e2e8f0;
+      position: relative;
+      transition: transform 0.25s ease;
+      transform: rotate(var(--rot, -2deg));
+    }
+
+    .polaroid:hover {
+      transform: rotate(0deg) scale(1.03);
+      z-index: 5;
+    }
+
+    .polaroid.large {
+      max-width: 92%;
+      margin: 4px auto;
+    }
+
+    /* Realistic CSS Yellow Paper Clip */
+    .paper-clip {
+      position: absolute;
+      top: -12px;
+      right: 16px;
+      width: 16px;
+      height: 34px;
+      border: 3px solid var(--clip-yellow);
+      border-radius: 10px;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.25);
+      z-index: 6;
+      transform: rotate(8deg);
+      pointer-events: none;
+    }
+
+    .paper-clip::after {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: 2px;
+      width: 6px;
+      height: 19px;
+      border: 2px solid var(--clip-yellow);
+      border-bottom: none;
+      border-radius: 6px 6px 0 0;
+    }
+
+    .polaroid img, .polaroid video {
+      width: 100%;
+      height: 135px;
+      object-fit: cover;
+       object-position: center top;
+      display: block;
+      background: #e2e8f0;
+      cursor: zoom-in;
+      border-radius: 2px;
+    }
+
+    .polaroid.large img {
+      height: 195px;
+    }
+
+    .caption {
+      font-family: 'Caveat', cursive;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #1e293b;
+      margin-top: 6px;
+      font-weight: 700;
+    }
+
+    /* Upload Button on Polaroids */
+    .upload-label {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: rgba(30, 58, 138, 0.85);
+      color: #fff;
+      font-size: 0.68rem;
+      padding: 3px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid var(--clip-yellow);
+      opacity: 0.9;
+      transition: opacity 0.2s;
+      z-index: 4;
+    }
+
+    .upload-label:hover {
+      opacity: 1;
+      background: var(--book-blue-light);
+    }
+
+    .upload-label input {
+      display: none;
+    }
+
+    /* Friend Cards & Instagram Links (Page 3) */
+    .friends-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .friend-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      border: 1px solid #cbd5e1;
+      position: relative;
+    }
+
+    .friend-card img {
+      width: 64px;
+      height: 64px;
+      border-radius: 6px;
+      object-fit: cover;
+      cursor: zoom-in;
+      border: 2px solid var(--book-blue);
+      flex-shrink: 0;
+    }
+
+    .friend-info {
+      flex: 1;
+    }
+
+    .friend-info h4 {
+      font-family: 'Caveat', cursive;
+      font-size: 1.45rem;
+      color: var(--book-blue);
+      line-height: 1;
+    }
+
+    .friend-info p {
+      font-size: 0.78rem;
+      color: #475569;
+      margin: 2px 0 5px;
+    }
+
+    .insta-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+      color: #fff;
+      text-decoration: none;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 12px;
+    }
+
+    /* Page Footer & Number */
+    .page-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.78rem;
+      color: #64748b;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 6px;
+    }
+
+    .page-num {
+      font-weight: 700;
+      color: var(--book-blue);
+      background: #dbeafe;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* Bottom Navigation Controls */
+    .controls {
+      display: flex;
+       flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 500px;
+      z-index: 20;
+    }
+
+    .nav-buttons {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn {
+      background: var(--book-blue);
+      color: #fff;
+      border: 2px solid var(--clip-yellow);
+      padding: 9px 18px;
+      border-radius: 25px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      transition: all 0.2s;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: var(--book-blue-light);
+      transform: translateY(-2px);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .status-text {
+      color: #fef08a;
+      font-size: 0.9rem;
+      font-weight: 600;
+      min-width: 130px;
+      text-align: center;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid rgba(250, 204, 21, 0.5);
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 16.66%;
+      background: var(--clip-yellow);
+      transition: width 0.4s ease;
+    }
+
+    /* Fullscreen Image Lightbox */
+    .lightbox {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      display: none;
+       flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      padding: 20px;
+    }
+
+    .lightbox.active {
+      display: flex;
+    }
+
+    .lightbox img {
+      max-width: 92vw;
+      max-height: 80vh;
+      border: 8px solid #fff;
+      border-radius: 4px;
+      box-shadow: 0 10px 35px rgba(0,0,0,0.8);
+    }
+
+    .lightbox-caption {
+      font-family: 'Caveat', cursive;
+      color: var(--clip-yellow);
+      font-size: 2rem;
+      margin-top: 12px;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 25px;
+      background: var(--clip-yellow);
+      color: #1e3a8a;
+      border: none;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+    }
+
+    /* Responsive Mobile Single-Page View (Android & Phones) */
+    @media (max-width: 920px) {
+      :root {
+        --book-width: 92vw;
+        --book-height: 74vh;
+      }
+
+      .scene {
+        width: var(--book-width);
+      }
+
+      /* On mobile, keep active page centered rather than double-spread offset */
+      .book.open-desktop {
+        transform: translateX(0);
+      }
+
+      /* When a sheet flips left on narrow screens, hide it gracefully so it doesn't overflow offscreen */
+      .sheet.flipped {
+        transform: rotateY(-180deg);
+        pointer-events: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controls: Hint & Music Toggle -->
+  <div class="top-bar">
+    <div class="badge">📘 Click photos to zoom • Click 📷 to load your photos</div>
+    <button class="music-btn" id="musicToggle" aria-label="Toggle nostalgic background music">
+      🎵 Music: OFF
+    </button>
+  </div>
+
+  <!-- 3D Flipbook Scene -->
+  <div class="scene" id="bookScene">
+    <div class="book" id="book">
+
+      <!-- ================= SHEET 1 (Pages 1 & 2) ================= -->
+      <div class="sheet" data-sheet="0">
+        
+        <!-- PAGE 1: Welcome & Closed School Cover -->
+        <div class="page-surface front cover-front" id="coverFront">
+          <div class="cover-frame">
+            <span class="cover-subtitle">✨ Blue Creative Scrapbook Edition ✨</span>
+            <h1 class="cover-title">Our School,<br>Our Friends,<br>Our Memories</h1>
+
+            <div class="polaroid" style="--rot: -2deg; width: 78%;">
+              <div class="paper-clip"></div>
+              <label class="upload-label" title="Select your school cover photo">
+                📷 Upload
+                <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-cover')">
+              </label>
+              <img id="img-cover" src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=700&q=80" alt="Our School Campus" onclick="openLightbox(this, 'Welcome to Our School Memories')">
+              <div class="caption">Batch Forever • Golden Days</div>
+            </div>
+
+            <div class="tap-prompt" onclick="nextPage()">
+              📖 Click or Tap Cover to Open Book
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 2: Ayush Gaurav and Friends -->
+        <div class="page-surface back">
+          <div>
+            <div class="page-header">
+              <h2 class="page-title">Ayush Gaurav & Friends</h2>
+              <span class="page-tag">Classroom Legends</span>
+            </div>
+
+            <div class="polaroid-grid">
+              <div class="polaroid" style="--rot: -2.5deg;">
+                <div class="paper-clip"></div>
+                <label class="upload-label">
+                  📷 Upload
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-ayush-1')">
+                </label>
+                <img id="img-ayush-1" src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80" alt="Ayush Gaurav and Friends" onclick="openLightbox(this, 'Ayush Gaurav & Squad')">
+                <div class="caption">Ayush Gaurav & Squad</div>
+              </div>
+
+              <div class="polaroid" style="--rot: 2deg;">
+                <div class="paper-clip"></div>
+                <label class="upload-label">
+                  📷 Upload
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-ayush-2')">
+                </label>
+                <img id="img-ayush-2" src="https://images.unsplash.com/photo-1511632765486-a01980e01a18?auto=format&fit=crop&w=600&q=80" alt="Backbench Memories" onclick="openLightbox(this, 'Lunch Break & Laughs')">
+                <div class="caption">Backbench Laughter</div>
+              </div>
+            </div>
+
+            <div class="memory-note">
+              "From sharing tiffins before the lunch bell to endless jokes in the corridor—Ayush Gaurav and the gang turned every ordinary school day into a lifelong memory."
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <span>Chapter 1 • Brotherhood</span>
+            <span class="page-num">Page 2 / 6</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SHEET 2 (Pages 3 & 4) ================= -->
+      <div class="sheet" data-sheet="1">
+
+        <!-- PAGE 3: Anup, Sajid and Shahzad with Instagram Links -->
+        <div class="page-surface front">
+          <div>
+            <div class="page-header">
+              <h2 class="page-title">Anup, Sajid & Shahzad</h2>
+              <span class="page-tag">Stay Connected</span>
+            </div>
+
+            <div class="friends-list">
+              <!-- Anup -->
+              <div class="friend-card">
+                <div class="paper-clip"></div>
+                <label class="upload-label" style="top:6px; left:6px;">
+                  📷
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-anup')">
+                </label>
+                <img id="img-anup" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80" alt="Anup" onclick="openLightbox(this, 'Anup — The Problem Solver')">
+                <div class="friend-info">
+                  <h4>Anup</h4>
+                  <p>Always ready with a smile and a plan for every school event.</p>
+                  <a class="insta-link" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
+                    📸 @anup_memories
+                  </a>
+                </div>
+              </div>
+
+              <!-- Sajid -->
+              <div class="friend-card">
+                <div class="paper-clip"></div>
+                <label class="upload-label" style="top:6px; left:6px;">
+                  📷
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-sajid')">
+                </label>
+                <img id="img-sajid" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=300&q=80" alt="Sajid" onclick="openLightbox(this, 'Sajid — Heart of the Group')">
+                <div class="friend-info">
+                  <h4>Sajid</h4>
+                  <p>The storyteller who made every free period unforgettable.</p>
+                  <a class="insta-link" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
+                    📸 @sajid_official
+                  </a>
+                </div>
+              </div>
+
+              <!-- Shahzad -->
+              <div class="friend-card">
+                <div class="paper-clip"></div>
+                <label class="upload-label" style="top:6px; left:6px;">
+                  📷
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-shahzad')">
+                </label>
+                <img id="img-shahzad" src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=300&q=80" alt="Shahzad" onclick="openLightbox(this, 'Shahzad — Forever Vibe')">
+                <div class="friend-info">
+                  <h4>Shahzad</h4>
+                  <p>Loyal friend, trip navigator, and master of good vibes.</p>
+                  <a class="insta-link" href="https://instagram.com/" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">
+                    📸 @shahzad_diaries
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <span>Chapter 2 • The Trio</span>
+            <span class="page-num">Page 3 / 6</span>
+          </div>
+        </div>
+
+        <!-- PAGE 4: One Teacher Profile -->
+        <div class="page-surface back">
+          <div>
+            <div class="page-header">
+              <h2 class="page-title">Our Guiding Light</h2>
+              <span class="page-tag">Teacher Profile</span>
+            </div>
+
+            <div class="polaroid large" style="--rot: -1.5deg;">
+              <div class="paper-clip"></div>
+              <label class="upload-label">
+                📷 Upload Teacher Photo
+                <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-teacher')">
+              </label>
+              <img id="img-teacher" src="https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80" alt="Respected Teacher" onclick="openLightbox(this, 'Our Respected Mentor & Teacher')">
+              <div class="caption">Respected Mentor & Class Teacher</div>
+            </div>
+
+            <div class="memory-note">
+              <strong>Tribute of Gratitude:</strong><br>
+              "Thank you for believing in us even when we doubted ourselves. Your patience, discipline, and kindness shaped not just our grades, but who we are today."
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <span>Chapter 3 • Mentorship</span>
+            <span class="page-num">Page 4 / 6</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ================= SHEET 3 (Pages 5 & 6) ================= -->
+      <div class="sheet" data-sheet="2">
+
+        <!-- PAGE 5: Nepal–Thori School Trip with Original Group Photo -->
+        <div class="page-surface front">
+          <div>
+            <div class="page-header">
+              <h2 class="page-title">Nepal–Thori School Trip</h2>
+              <span class="page-tag">Adventure ⛰️</span>
+            </div>
+
+            <div class="polaroid large" style="--rot: 1.5deg;">
+              <div class="paper-clip"></div>
+              <label class="upload-label">
+                📷 Select Nepal–Thori Group Photo
+                <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-nepal-trip')">
+              </label>
+              <img id="img-nepal-trip" src="https://images.unsplash.com/photo-1539635278303-d4002c07eae3?auto=format&fit=crop&w=800&q=80" alt="Nepal-Thori Original Group Photograph" onclick="openLightbox(this, 'Nepal–Thori School Trip — Original Group Photograph')">
+              <div class="caption">Nepal–Thori Group Photograph • All Faces, One Family</div>
+            </div>
+
+            <div class="memory-note">
+              "Bus songs at full volume, scenic hills of Thori, border-side snacks, and posing together for our iconic group photograph—this trip remains the highlight of our school life!"
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <span>Chapter 4 • Travel Diaries</span>
+            <span class="page-num">Page 5 / 6</span>
+          </div>
+        </div>
+
+        <!-- PAGE 6: School Photos & Video Memories -->
+        <div class="page-surface back">
+          <div>
+            <div class="page-header">
+              <h2 class="page-title">Photos & Video Memories</h2>
+              <span class="page-tag">Final Page 🎬</span>
+            </div>
+
+            <div class="polaroid-grid">
+              <div class="polaroid" style="--rot: -2deg;">
+                <div class="paper-clip"></div>
+                <label class="upload-label">
+                  📷 Photo
+                  <input type="file" accept="image/*" onchange="loadCustomPhoto(event, 'img-farewell')">
+                </label>
+                <img id="img-farewell" src="https://images.unsplash.com/photo-1523580494863-6f3031224c94?auto=format&fit=crop&w=600&q=80" alt="Farewell Day" onclick="openLightbox(this, 'Last Day Signatures & Smiles')">
+                <div class="caption">Farewell Signatures</div>
+              </div>
+
+              <!-- Interactive Video Memory Slot -->
+              <div class="polaroid" style="--rot: 2deg;">
+                <div class="paper-clip"></div>
+                <label class="upload-label">
+                  🎥 Load Video
+                  <input type="file" accept="video/*" onchange="loadCustomVideo(event, 'vid-memory')">
+                </label>
+                <video id="vid-memory" controls preload="metadata" poster="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=600&q=80">
+                  <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+                  Your browser does not support video playback.
+                </video>
+                <div class="caption">School Video Clip</div>
+              </div>
+            </div>
+
+            <div class="memory-note">
+              "School ends, classrooms empty out, but these pages keep us together forever."
+            </div>
+          </div>
+
+          <div class="page-footer">
+            <button class="btn" style="padding: 4px 12px; font-size:0.75rem;" onclick="resetBook()">🔄 Close & Replay Book</button>
+            <span class="page-num">Page 6 / 6</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Navigation & Progress Indicator -->
+  <div class="controls">
+    <div class="nav-buttons">
+      <button class="btn" id="prevBtn" onclick="prevPage()" disabled>⬅ Previous</button>
+      <div class="status-text" id="pageIndicator">Page 1 of 6 (Cover)</div>
+      <button class="btn" id="nextBtn" onclick="nextPage()">Next Page ➡</button>
+    </div>
+    <div class="progress-track">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+  </div>
+
+  <!-- Click-to-Zoom Lightbox -->
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <button class="lightbox-close" onclick="closeLightbox()">✕ Close</button>
+    <img id="lightboxImg" src="" alt="Enlarged school memory">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
+  <script>
+    const sheets = Array.from(document.querySelectorAll('.sheet'));
+    const book = document.getElementById('book');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const pageIndicator = document.getElementById('pageIndicator');
+    const progressBar = document.getElementById('progressBar');
+
+    // State: 0 = Closed Cover (Page 1), 1 = Spread (Pages 2-3), 2 = Spread (Pages 4-5), 3 = Back Page (Page 6)
+    let currentStep = 0;
+    const totalSteps = sheets.length; // 3 physical sheets = 6 pages
+
+    function updateBookState() {
+      sheets.forEach((sheet, index) => {
+        if (index < currentStep) {
+          sheet.classList.add('flipped');
+          // Adjust z-index so flipped sheets stack in reverse order on the left
+          sheet.style.zIndex = 10 + index;
+        } else {
+          sheet.classList.remove('flipped');
+          // Unflipped sheets stack top-to-bottom on the right
+          sheet.style.zIndex = 30 - index;
+        }
+      });
+
+      // Center open spread on desktop
+      if (currentStep > 0 && currentStep < totalSteps) {
+        book.classList.add('open-desktop');
+      } else if (currentStep === totalSteps) {
+        book.classList.add('open-desktop');
+      } else {
+        book.classList.remove('open-desktop');
+      }
+
+      // Calculate displayed page numbers & progress
+      let label = '';
+      let progressPercent = 16.66;
+
+      if (currentStep === 0) {
+        label = 'Page 1 of 6 (Cover)';
+        progressPercent = 16.66;
+      } else if (currentStep === 1) {
+        label = 'Pages 2–3 of 6';
+        progressPercent = 50;
+      } else if (currentStep === 2) {
+        label = 'Pages 4–5 of 6';
+        progressPercent = 83.33;
+      } else if (currentStep === 3) {
+        label = 'Page 6 of 6 (Memories)';
+        progressPercent = 100;
+      }
+
+      pageIndicator.textContent = label;
+      progressBar.style.width = `${progressPercent}%`;
+
+      prevBtn.disabled = currentStep === 0;
+      nextBtn.disabled = currentStep === totalSteps;
+    }
+
+    function nextPage() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        playPageFlipSound();
+        updateBookState();
+      }
+    }
+
+    function prevPage() {
+      if (currentStep > 0) {
+        currentStep--;
+        playPageFlipSound();
+        updateBookState();
+      }
+    }
+
+    function resetBook() {
+      currentStep = 0;
+      playPageFlipSound();
+      updateBookState();
+    }
+
+    // Load user's original local photos without modifying faces
+    function loadCustomPhoto(event, targetImgId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const imgEl = document.getElementById(targetImgId);
+      if (imgEl) {
+        imgEl.src = url;
+      }
+    }
+
+    // Load user's original local video memory
+    function loadCustomVideo(event, targetVideoId) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const url = URL.createObjectURL(file);
+      const videoEl = document.getElementById(targetVideoId);
+      if (videoEl) {
+        videoEl.src = url;
+        videoEl.load();
+        videoEl.play();
+      }
+    }
+
+    // Fullscreen Lightbox for Polaroid Photos
+    function openLightbox(imgElement, captionText) {
+      event.stopPropagation();
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      const lightboxCaption = document.getElementById('lightboxCaption');
+
+      lightboxImg.src = imgElement.src;
+      lightboxCaption.textContent = captionText || '';
+      lightbox.classList.add('active');
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+    }
+
+    // Keyboard Arrow Support
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') nextPage();
+      if (e.key === 'ArrowLeft') prevPage();
+      if (e.key === 'Escape') closeLightbox();
+    });
+
+    // Touch-Swipe Support for Android / Mobile
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const scene = document.getElementById('bookScene');
+
+    scene.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    scene.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      const delta = touchEndX - touchStartX;
+      if (Math.abs(delta) > 45) {
+        if (delta < 0) nextPage(); // Swipe Left -> Next Page
+        else prevPage();           // Swipe Right -> Previous Page
+      }
+    }, { passive: true });
+
+    // Web Audio API: Gentle Page Flip Rustle & Nostalgic Music Box Toggle
+    let audioCtx = null;
+    let isMusicPlaying = false;
+    let musicInterval = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
+
+    function playPageFlipSound() {
+      try {
+        initAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(170, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(65, audioCtx.currentTime + 0.12);
+
+        gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.12);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.12);
+      } catch (e) {
+        // Ignore if browser blocks autoplay before interaction
+      }
+    }
+
+    // Simple built-in nostalgic melody (works offline without external MP3 dependencies)
+    const melodyNotes = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 349.23, 440.00, 349.23];
+    let noteIndex = 0;
+
+    document.getElementById('musicToggle').addEventListener('click', function () {
+      initAudio();
+      isMusicPlaying = !isMusicPlaying;
+
+      if (isMusicPlaying) {
+        this.textContent = '🎵 Music: ON';
+        musicInterval = setInterval(() => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(melodyNotes[noteIndex % melodyNotes.length], audioCtx.currentTime);
+
+          gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.0008, audioCtx.currentTime + 0.65);
+
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.65);
+          noteIndex++;
+        }, 700);
+      } else {
+        this.textContent = '🎵 Music: OFF';
+        clearInterval(musicInterval);
+      }
+    });
+
+    // Initialize Z-index stacking on load
+    updateBookState();
+  </script>
+</body>
+</html>
